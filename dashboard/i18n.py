@@ -1,0 +1,76 @@
+"""Internationalization for dashboard (EN/RU)."""
+
+from __future__ import annotations
+
+TRANSLATIONS = {
+    "en": {
+        "title": "RAG Benchmark Dashboard",
+        "tab_overview": "Overview",
+        "tab_by_type": "By Query Type",
+        "tab_by_doc": "By Document",
+        "tab_run": "Run Benchmark",
+        "tab_article": "Article",
+        "accuracy": "Accuracy",
+        "latency": "Avg Latency (s)",
+        "confidence": "Avg Confidence",
+        "adapter": "Adapter",
+        "mode": "Mode",
+        "run_button": "Run Benchmark",
+        "generate_article": "Generate Article",
+        "no_results": "No results yet. Run a benchmark first.",
+        "select_run": "Select run",
+        "services_health": "Service Health",
+        "total_questions": "Total Questions",
+        "passed": "Passed",
+        "failed": "Failed",
+        "best_performer": "Best Performer",
+        "ingestion_stats": "Ingestion Stats",
+        "question_detail": "Question Detail",
+        "en_document": "EN Document",
+        "ru_document": "RU Document",
+        "cross_language": "Cross-Language",
+        "select_adapters": "Select Adapters",
+        "lang_mode": "Language Mode",
+        "running": "Running...",
+        "copy_article": "Copy to Clipboard",
+        "export_md": "Export Markdown",
+    },
+    "ru": {
+        "title": "RAG Benchmark Dashboard",
+        "tab_overview": "Обзор",
+        "tab_by_type": "По типам вопросов",
+        "tab_by_doc": "По документам",
+        "tab_run": "Запуск бенчмарка",
+        "tab_article": "Статья",
+        "accuracy": "Точность",
+        "latency": "Ср. задержка (с)",
+        "confidence": "Ср. уверенность",
+        "adapter": "Адаптер",
+        "mode": "Режим",
+        "run_button": "Запустить бенчмарк",
+        "generate_article": "Сгенерировать статью",
+        "no_results": "Нет результатов. Сначала запустите бенчмарк.",
+        "select_run": "Выберите запуск",
+        "services_health": "Состояние сервисов",
+        "total_questions": "Всего вопросов",
+        "passed": "Пройдено",
+        "failed": "Не пройдено",
+        "best_performer": "Лучший результат",
+        "ingestion_stats": "Статистика загрузки",
+        "question_detail": "Детали вопроса",
+        "en_document": "EN документ",
+        "ru_document": "RU документ",
+        "cross_language": "Кросс-языковой",
+        "select_adapters": "Выберите адаптеры",
+        "lang_mode": "Языковой режим",
+        "running": "Выполняется...",
+        "copy_article": "Копировать",
+        "export_md": "Экспорт Markdown",
+    },
+}
+
+
+def get_translator(lang: str = "ru"):
+    """Return translator function for given language."""
+    strings = TRANSLATIONS.get(lang, TRANSLATIONS["en"])
+    return lambda key: strings.get(key, key)
