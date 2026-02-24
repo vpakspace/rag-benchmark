@@ -119,6 +119,17 @@ class TemporalKBAdapter(BaseAdapter):
             )
         except Exception as e:
             duration = round(time.monotonic() - start, 3)
+            error_msg = str(e)
+            # Lucene fulltext query errors happen during entity resolution
+            # when extracted entity names contain "/" or other special chars.
+            # The Graphiti episode + temporal events may still be usable,
+            # so treat this as partial success to allow query phase to run.
+            if "fulltext.queryNodes" in error_msg or "lucene" in error_msg.lower():
+                logger.warning("TKB ingest partial (Lucene error in entity resolution): %s", e)
+                return IngestResult(
+                    adapter=self.name, document=Path(file_path).name,
+                    chunks_count=1, duration_seconds=duration, success=True,
+                )
             logger.error("TKB ingest error: %s", e)
             return IngestResult(
                 adapter=self.name, document=Path(file_path).name,

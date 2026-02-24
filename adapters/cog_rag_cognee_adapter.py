@@ -24,6 +24,29 @@ _MODE_TO_SEARCH_TYPE = {
 }
 
 
+def _load_crc_env() -> None:
+    """Load CRC project .env to override benchmark-level LLM/EMBEDDING vars.
+
+    The benchmark's .env sets LLM_MODEL=gpt-4o-mini (OpenAI) for the judge,
+    but CRC needs llama3.1:8b (Ollama).  Pydantic BaseSettings reads os.environ
+    first, so we must set the correct values before Settings() is created.
+    """
+    env_path = CRC_PATH / ".env"
+    if not env_path.exists():
+        return
+    for line in env_path.read_text().splitlines():
+        line = line.strip()
+        if not line or line.startswith("#"):
+            continue
+        if "=" not in line:
+            continue
+        key, _, value = line.partition("=")
+        key = key.strip()
+        # Override LLM and embedding settings that may conflict
+        if key.startswith(("LLM_", "EMBEDDING_")):
+            os.environ[key] = value.strip()
+
+
 def _import_crc() -> ModuleType:
     """Import cog-rag-cognee modules with isolated sys.path."""
     import importlib
@@ -65,6 +88,10 @@ class CogRAGCogneeAdapter(BaseAdapter):
         return self._loop.run_until_complete(coro)
 
     def setup(self) -> None:
+        # Phase 0: load CRC .env so Pydantic Settings picks up Ollama models
+        # instead of benchmark-level LLM_MODEL=gpt-4o-mini
+        _load_crc_env()
+
         # Phase 1: import config and cognee_setup (lightweight, no Cognee SDK)
         self._mod = _import_crc()
         settings = self._mod.get_settings()
