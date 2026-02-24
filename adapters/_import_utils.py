@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import os
 import sys
 
 # Packages that exist in multiple projects and cause sys.modules conflicts
@@ -18,6 +19,9 @@ def prepare_imports(project_path: str, extra_paths: list[str] | None = None):
     modules stay available for constructors and method calls.
     Each adapter calls this before importing, so each adapter gets a
     clean slate for its own project's packages.
+
+    Also changes cwd to the project directory so that Pydantic Settings
+    reads the project's own .env (not rag-benchmark's .env).
     """
     # 1. Clear conflicting cached modules
     for pkg in CONFLICTING_PACKAGES:
@@ -37,3 +41,7 @@ def prepare_imports(project_path: str, extra_paths: list[str] | None = None):
         if p_str in sys.path:
             sys.path.remove(p_str)
         sys.path.insert(1, p_str)
+
+    # 4. Change cwd to project dir so Pydantic Settings reads
+    #    the project's .env instead of rag-benchmark's .env
+    os.chdir(project_str)

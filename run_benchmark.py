@@ -71,6 +71,10 @@ def main():
         except Exception as e:
             logging.warning("Failed to initialize %s: %s", cls.__name__, e)
 
+    # Restore cwd after adapter imports (adapters change cwd to their project dirs)
+    import os
+    os.chdir(Path(__file__).parent)
+
     # Filter adapters
     if args.adapters:
         adapters = [registry.get(n) for n in args.adapters if registry.get(n)]
