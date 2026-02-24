@@ -53,6 +53,7 @@ class RAG2Adapter(BaseAdapter):
         self._retriever = self._mod.Retriever(self._store)
 
     def ingest(self, file_path: str) -> IngestResult:
+        prepare_imports(str(RAG2_PATH))
         start = time.monotonic()
         try:
             text = self._mod.load_file(file_path)
@@ -74,6 +75,7 @@ class RAG2Adapter(BaseAdapter):
             )
 
     def query(self, question: str, mode: str, lang: str) -> QueryResult:
+        prepare_imports(str(RAG2_PATH))
         start = time.monotonic()
         try:
             if mode == "vector":

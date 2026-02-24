@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import logging
+import os
 import time
 from pathlib import Path
 from types import ModuleType
@@ -37,6 +38,9 @@ def _import_agr() -> ModuleType:
     dual = importlib.import_module("agentic_graph_rag.indexing.dual_node")
     mod.create_passage_nodes = dual.create_passage_nodes
     mod.create_phrase_nodes = dual.create_phrase_nodes
+    # Entity extraction (for phrase nodes)
+    skeleton = importlib.import_module("agentic_graph_rag.indexing.skeleton")
+    mod.extract_entities_full = skeleton.extract_entities_full
     # Service
     mod.PipelineService = importlib.import_module("agentic_graph_rag.service").PipelineService
     return mod
@@ -56,7 +60,6 @@ class AgenticGraphRAGAdapter(BaseAdapter):
 
     def setup(self) -> None:
         self._mod = _import_agr()
-        # PipelineService requires driver and openai_client
         cfg = self._mod.get_settings()
         self._driver = GraphDatabase.driver(
             cfg.neo4j.uri,
@@ -66,15 +69,28 @@ class AgenticGraphRAGAdapter(BaseAdapter):
         self._service = self._mod.PipelineService(self._driver, client)
 
     def ingest(self, file_path: str) -> IngestResult:
+        prepare_imports(str(AGR_PATH), extra_paths=[str(AGR_RAG_CORE)])
         start = time.monotonic()
         try:
             text = self._mod.load_file(file_path)
             chunks = self._mod.chunk_text(text)
             chunks = self._mod.enrich_chunks(chunks)
             chunks = self._mod.embed_chunks(chunks)
-            passage_count = self._mod.create_passage_nodes(chunks)
-            phrase_count = self._mod.create_phrase_nodes(chunks)
-            total = (passage_count or 0) + (phrase_count or 0)
+            # Create passage nodes (vector index) in Neo4j
+            passage_nodes = self._mod.create_passage_nodes(chunks, self._driver)
+            passage_count = len(passage_nodes) if passage_nodes else 0
+            # Extract entities and create phrase nodes (knowledge graph)
+            phrase_count = 0
+            try:
+                entities, _rels = self._mod.extract_entities_full(chunks)
+                if entities:
+                    phrase_nodes = self._mod.create_phrase_nodes(
+                        entities, self._driver,
+                    )
+                    phrase_count = len(phrase_nodes) if phrase_nodes else 0
+            except Exception as e:
+                logger.warning("AGR phrase node creation skipped: %s", e)
+            total = passage_count + phrase_count
             duration = round(time.monotonic() - start, 3)
             return IngestResult(
                 adapter=self.name, document=Path(file_path).name,
@@ -89,6 +105,7 @@ class AgenticGraphRAGAdapter(BaseAdapter):
             )
 
     def query(self, question: str, mode: str, lang: str) -> QueryResult:
+        prepare_imports(str(AGR_PATH), extra_paths=[str(AGR_RAG_CORE)])
         start = time.monotonic()
         try:
             qa = self._service.query(question, mode=mode)

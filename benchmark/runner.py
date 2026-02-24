@@ -4,10 +4,13 @@ from __future__ import annotations
 
 import json
 import logging
+import signal
 import time
 from datetime import datetime
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Callable
+
+QUERY_TIMEOUT = 120  # seconds per query
 
 from adapters.base import BaseAdapter, EvalResult, Question, BenchmarkRun
 from benchmark.evaluate import evaluate_answer
@@ -99,7 +102,18 @@ def run_benchmark(
 
                 start = time.monotonic()
                 try:
-                    qr = adapter.query(question_text, mode, lang)
+                    # Timeout guard: kill query if it exceeds QUERY_TIMEOUT
+                    def _timeout_handler(signum, frame):
+                        raise TimeoutError(f"Query timed out after {QUERY_TIMEOUT}s")
+
+                    old_handler = signal.signal(signal.SIGALRM, _timeout_handler)
+                    signal.alarm(QUERY_TIMEOUT)
+                    try:
+                        qr = adapter.query(question_text, mode, lang)
+                    finally:
+                        signal.alarm(0)
+                        signal.signal(signal.SIGALRM, old_handler)
+
                     latency = round(time.monotonic() - start, 3)
 
                     try:

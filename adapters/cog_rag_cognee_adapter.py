@@ -4,12 +4,13 @@ from __future__ import annotations
 
 import asyncio
 import logging
-import sys
+import os
 import time
 from pathlib import Path
 from types import ModuleType
 
 from adapters.base import BaseAdapter, IngestResult, QueryResult
+from adapters._import_utils import prepare_imports
 
 logger = logging.getLogger(__name__)
 
@@ -23,34 +24,26 @@ _MODE_TO_SEARCH_TYPE = {
 }
 
 
-def _run_async(coro):
-    """Run async coroutine from sync context."""
-    try:
-        loop = asyncio.get_running_loop()
-    except RuntimeError:
-        loop = None
-
-    if loop and loop.is_running():
-        import concurrent.futures
-        with concurrent.futures.ThreadPoolExecutor() as pool:
-            return pool.submit(asyncio.run, coro).result()
-    else:
-        return asyncio.run(coro)
-
-
 def _import_crc() -> ModuleType:
-    """Import cog-rag-cognee modules via sys.path bridge."""
+    """Import cog-rag-cognee modules with isolated sys.path."""
     import importlib
 
-    project = str(CRC_PATH)
-    if project not in sys.path:
-        sys.path.insert(0, project)
+    prepare_imports(str(CRC_PATH))
 
     mod = ModuleType("crc_bridge")
-    mod.PipelineService = importlib.import_module("cog_rag_cognee.service").PipelineService
     mod.get_settings = importlib.import_module("cog_rag_cognee.config").get_settings
     mod.apply_cognee_env = importlib.import_module("cog_rag_cognee.cognee_setup").apply_cognee_env
     return mod
+
+
+def _import_crc_service() -> type:
+    """Import PipelineService separately — after env vars are configured.
+
+    Cognee SDK checks LLM_API_KEY at import time, so env vars must be
+    set before importing modules that pull in Cognee.
+    """
+    import importlib
+    return importlib.import_module("cog_rag_cognee.service").PipelineService
 
 
 class CogRAGCogneeAdapter(BaseAdapter):
@@ -63,18 +56,43 @@ class CogRAGCogneeAdapter(BaseAdapter):
     def __init__(self) -> None:
         self._mod = None
         self._service = None
+        self._loop = None
+
+    def _run(self, coro):
+        """Run async coroutine on a persistent event loop."""
+        if self._loop is None or self._loop.is_closed():
+            self._loop = asyncio.new_event_loop()
+        return self._loop.run_until_complete(coro)
 
     def setup(self) -> None:
+        # Phase 1: import config and cognee_setup (lightweight, no Cognee SDK)
         self._mod = _import_crc()
         settings = self._mod.get_settings()
+
+        # Phase 2: override Neo4j credentials to match benchmark container
+        # CRC uses GRAPH_DATABASE_PASSWORD, not NEO4J_PASSWORD
+        neo4j_pw = os.environ.get("NEO4J_PASSWORD", "temporal_kb_2026")
+        os.environ["GRAPH_DATABASE_PASSWORD"] = neo4j_pw
+        os.environ["GRAPH_DATABASE_URL"] = os.environ.get(
+            "NEO4J_URI", "bolt://localhost:7687"
+        )
+        os.environ["GRAPH_DATABASE_USERNAME"] = os.environ.get(
+            "NEO4J_USER", "neo4j"
+        )
+
+        # Phase 3: apply Cognee env vars (LLM_API_KEY, etc.)
         self._mod.apply_cognee_env(settings)
-        self._service = self._mod.PipelineService()
+
+        # Phase 4: now safe to import PipelineService (Cognee SDK env vars are set)
+        PipelineService = _import_crc_service()
+        self._service = PipelineService()
 
     def ingest(self, file_path: str) -> IngestResult:
+        prepare_imports(str(CRC_PATH))
         start = time.monotonic()
         try:
-            _run_async(self._service.add_file(file_path))
-            _run_async(self._service.cognify())
+            self._run(self._service.add_file(file_path))
+            self._run(self._service.cognify())
             duration = round(time.monotonic() - start, 3)
             return IngestResult(
                 adapter=self.name, document=Path(file_path).name,
@@ -90,10 +108,11 @@ class CogRAGCogneeAdapter(BaseAdapter):
             )
 
     def query(self, question: str, mode: str, lang: str) -> QueryResult:
+        prepare_imports(str(CRC_PATH))
         start = time.monotonic()
         try:
             search_type = _MODE_TO_SEARCH_TYPE.get(mode, "CHUNKS")
-            qa = _run_async(self._service.query(question, search_type=search_type))
+            qa = self._run(self._service.query(question, search_type=search_type))
             latency = round(time.monotonic() - start, 3)
             return QueryResult(
                 adapter=self.name, mode=mode, question_id=0,
@@ -112,9 +131,12 @@ class CogRAGCogneeAdapter(BaseAdapter):
     def cleanup(self) -> None:
         if self._service:
             try:
-                _run_async(self._service.reset())
+                self._run(self._service.reset())
             except Exception as e:
                 logger.warning("CRC cleanup error: %s", e)
+        if self._loop and not self._loop.is_closed():
+            self._loop.close()
+            self._loop = None
 
     def health_check(self) -> bool:
         return CRC_PATH.exists()

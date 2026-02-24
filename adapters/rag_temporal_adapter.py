@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import logging
+import sys
 import time
 from pathlib import Path
 from types import ModuleType
@@ -15,6 +16,13 @@ logger = logging.getLogger(__name__)
 RT_PATH = Path.home() / "rag-temporal"
 RAG2_PATH = Path.home() / "rag-2.0"
 
+# Paths that may conflict with rag-temporal imports
+_CONFLICTING_PATHS = [
+    str(Path.home() / "temporal-knowledge-base"),
+    str(Path.home() / "cog-rag-cognee"),
+    str(Path.home() / "agentic-graph-rag"),
+]
+
 
 def _import_rt() -> ModuleType:
     """Import rag-temporal modules with isolated sys.path.
@@ -23,6 +31,11 @@ def _import_rt() -> ModuleType:
     so both project paths must be available.
     """
     import importlib
+
+    # Remove paths from other projects that share package names
+    for p in _CONFLICTING_PATHS:
+        if p in sys.path:
+            sys.path.remove(p)
 
     prepare_imports(str(RT_PATH), extra_paths=[str(RAG2_PATH)])
 
@@ -54,7 +67,15 @@ class RAGTemporalAdapter(BaseAdapter):
             vector_store=self._pipeline.vector_store,
         )
 
+    def _ensure_context(self):
+        """Restore sys.path for rag-temporal before operations."""
+        for p in _CONFLICTING_PATHS:
+            if p in sys.path:
+                sys.path.remove(p)
+        prepare_imports(str(RT_PATH), extra_paths=[str(RAG2_PATH)])
+
     def ingest(self, file_path: str) -> IngestResult:
+        self._ensure_context()
         start = time.monotonic()
         try:
             result = self._pipeline.ingest_file(file_path)
@@ -73,6 +94,7 @@ class RAGTemporalAdapter(BaseAdapter):
             )
 
     def query(self, question: str, mode: str, lang: str) -> QueryResult:
+        self._ensure_context()
         start = time.monotonic()
         try:
             if mode == "agent":

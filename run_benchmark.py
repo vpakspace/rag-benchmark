@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import argparse
 import logging
+import os
 import sys
 from pathlib import Path
 
@@ -26,6 +27,25 @@ ALL_ADAPTER_CLASSES = [
     TemporalKBAdapter,
     CogRAGCogneeAdapter,
 ]
+
+
+def _load_benchmark_env():
+    """Load infrastructure env vars from benchmark .env into os.environ.
+
+    Env vars take precedence over project .env files in Pydantic BaseSettings,
+    ensuring all adapters use the same Neo4j / OpenAI credentials.
+    """
+    env_path = Path(__file__).parent / ".env"
+    if not env_path.exists():
+        return
+    for line in env_path.read_text().splitlines():
+        line = line.strip()
+        if not line or line.startswith("#"):
+            continue
+        if "=" not in line:
+            continue
+        key, _, value = line.partition("=")
+        os.environ.setdefault(key.strip(), value.strip())
 
 
 def main():
@@ -57,6 +77,8 @@ def main():
         format="%(asctime)s %(name)s %(levelname)s %(message)s",
     )
 
+    _load_benchmark_env()
+
     # Register adapters
     registry = AdapterRegistry()
     for cls in ALL_ADAPTER_CLASSES:
@@ -72,7 +94,6 @@ def main():
             logging.warning("Failed to initialize %s: %s", cls.__name__, e)
 
     # Restore cwd after adapter imports (adapters change cwd to their project dirs)
-    import os
     os.chdir(Path(__file__).parent)
 
     # Filter adapters
@@ -103,14 +124,26 @@ def main():
         "ru_graph_kb": str(data_dir / "ru_graph_kb.txt"),
     }
 
-    # Ingest
+    # Ingest — skip adapters where all documents fail
+    failed_adapters = set()
     for adapter in adapters:
         print(f"\nIngesting documents into {adapter.name}...")
+        successes = 0
         for doc_name, doc_path in documents.items():
             result = adapter.ingest(doc_path)
             status = "OK" if result.success else f"FAIL: {result.error}"
             print(f"  {doc_name}: {result.chunks_count} chunks, "
                   f"{result.duration_seconds}s — {status}")
+            if result.success:
+                successes += 1
+        if successes == 0:
+            print(f"  ** Skipping {adapter.name} — all ingests failed")
+            failed_adapters.add(adapter.name)
+
+    adapters = [a for a in adapters if a.name not in failed_adapters]
+    if not adapters:
+        print("\nNo adapters with successful ingest. Exiting.")
+        sys.exit(1)
 
     # Run benchmark
     try:

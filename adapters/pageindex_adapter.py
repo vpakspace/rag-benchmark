@@ -46,6 +46,7 @@ class PageIndexAdapter(BaseAdapter):
         self._store = self._mod.TreeStore()
 
     def ingest(self, file_path: str) -> IngestResult:
+        prepare_imports(str(PAGEINDEX_PATH))
         start = time.monotonic()
         try:
             text = self._mod.load_file(file_path)
@@ -67,6 +68,7 @@ class PageIndexAdapter(BaseAdapter):
             )
 
     def query(self, question: str, mode: str, lang: str) -> QueryResult:
+        prepare_imports(str(PAGEINDEX_PATH))
         trees = self._store.list_trees()
         if not trees:
             return QueryResult(
@@ -75,7 +77,7 @@ class PageIndexAdapter(BaseAdapter):
             )
         tree = self._store.load(doc_id=trees[0]["doc_id"])
         start = time.monotonic()
-        result = self._mod.reason_and_answer(question=question, tree=tree, store=self._store)
+        result = self._mod.reason_and_answer(question, tree, self._store)
         latency = round(time.monotonic() - start, 3)
         return QueryResult(
             adapter=self.name, mode=mode, question_id=0,

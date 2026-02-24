@@ -16,21 +16,6 @@ logger = logging.getLogger(__name__)
 TKB_PATH = Path.home() / "temporal-knowledge-base"
 
 
-def _run_async(coro):
-    """Run async coroutine from sync context."""
-    try:
-        loop = asyncio.get_running_loop()
-    except RuntimeError:
-        loop = None
-
-    if loop and loop.is_running():
-        import concurrent.futures
-        with concurrent.futures.ThreadPoolExecutor() as pool:
-            return pool.submit(asyncio.run, coro).result()
-    else:
-        return asyncio.run(coro)
-
-
 def _import_tkb() -> ModuleType:
     """Import temporal-knowledge-base modules with isolated sys.path."""
     import importlib
@@ -76,6 +61,17 @@ class TemporalKBAdapter(BaseAdapter):
         self._pipeline = None
         self._query_engine = None
         self._response_builder = None
+        self._loop = None
+
+    def _run(self, coro):
+        """Run async coroutine on a persistent event loop.
+
+        Using a single loop prevents 'Future attached to a different loop'
+        errors with Neo4j AsyncDriver.
+        """
+        if self._loop is None or self._loop.is_closed():
+            self._loop = asyncio.new_event_loop()
+        return self._loop.run_until_complete(coro)
 
     def setup(self) -> None:
         self._mod = _import_tkb()
@@ -83,12 +79,12 @@ class TemporalKBAdapter(BaseAdapter):
 
         # Build component graph (same order as api/server.py)
         neo4j = self._mod.Neo4jClient(settings.neo4j)
-        _run_async(neo4j.connect())
+        self._run(neo4j.connect())
 
         vector_store = self._mod.VectorStore(settings.openai)
         llm = self._mod.LLMClient(settings.openai)
         graphiti = self._mod.GraphitiClient(settings)
-        _run_async(graphiti.connect())
+        self._run(graphiti.connect())
 
         entity_resolver = self._mod.EntityResolver(neo4j, vector_store)
         invalidation_agent = self._mod.InvalidationAgent(
@@ -105,10 +101,11 @@ class TemporalKBAdapter(BaseAdapter):
         self._response_builder = self._mod.ResponseBuilder(llm, verifier)
 
     def ingest(self, file_path: str) -> IngestResult:
+        prepare_imports(str(TKB_PATH))
         start = time.monotonic()
         try:
             content = Path(file_path).read_text(encoding="utf-8")
-            result = _run_async(
+            result = self._run(
                 self._pipeline.ingest_episode(
                     content=content,
                     source=Path(file_path).name,
@@ -129,6 +126,7 @@ class TemporalKBAdapter(BaseAdapter):
             )
 
     def query(self, question: str, mode: str, lang: str) -> QueryResult:
+        prepare_imports(str(TKB_PATH))
         start = time.monotonic()
         try:
             intent = _MODE_TO_INTENT.get(mode, "HYBRID")
@@ -136,8 +134,8 @@ class TemporalKBAdapter(BaseAdapter):
                 query=question,
                 intent=self._mod.IntentType(intent),
             )
-            search_response = _run_async(self._query_engine.search(search_query))
-            response = _run_async(
+            search_response = self._run(self._query_engine.search(search_query))
+            response = self._run(
                 self._response_builder.build_response(question, search_response)
             )
             latency = round(time.monotonic() - start, 3)
@@ -157,7 +155,9 @@ class TemporalKBAdapter(BaseAdapter):
             )
 
     def cleanup(self) -> None:
-        pass
+        if self._loop and not self._loop.is_closed():
+            self._loop.close()
+            self._loop = None
 
     def health_check(self) -> bool:
         return TKB_PATH.exists()
