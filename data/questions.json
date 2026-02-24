@@ -1,0 +1,542 @@
+[
+  {
+    "id": 1,
+    "document": "en_llm_survey",
+    "question_en": "How many parameters does GPT-3 have?",
+    "question_ru": "Сколько параметров у GPT-3?",
+    "type": "simple",
+    "keywords": ["GPT-3", "175B", "parameters", "billion"],
+    "reference_answer": "GPT-3 has 175 billion parameters."
+  },
+  {
+    "id": 2,
+    "document": "en_llm_survey",
+    "question_en": "When was the Transformer architecture first introduced?",
+    "question_ru": "Когда была впервые представлена архитектура Transformer?",
+    "type": "simple",
+    "keywords": ["Transformer", "Vaswani", "2017", "June", "architecture"],
+    "reference_answer": "The Transformer architecture was introduced in June 2017 by Vaswani et al."
+  },
+  {
+    "id": 3,
+    "document": "en_llm_survey",
+    "question_en": "How many parameters does BERT-base have?",
+    "question_ru": "Сколько параметров у BERT-base?",
+    "type": "simple",
+    "keywords": ["BERT", "110M", "parameters", "base"],
+    "reference_answer": "BERT-base has 110 million parameters."
+  },
+  {
+    "id": 4,
+    "document": "en_llm_survey",
+    "question_en": "What is the parameter count of PaLM?",
+    "question_ru": "Сколько параметров у модели PaLM?",
+    "type": "simple",
+    "keywords": ["PaLM", "540B", "parameters", "billion"],
+    "reference_answer": "PaLM has 540 billion parameters."
+  },
+  {
+    "id": 5,
+    "document": "en_llm_survey",
+    "question_en": "On what date was ChatGPT released?",
+    "question_ru": "Когда был выпущен ChatGPT?",
+    "type": "simple",
+    "keywords": ["ChatGPT", "November", "2022", "released"],
+    "reference_answer": "ChatGPT was released on November 30, 2022."
+  },
+  {
+    "id": 6,
+    "document": "en_llm_survey",
+    "question_en": "What parameter range does the LLaMA model family cover?",
+    "question_ru": "Какой диапазон параметров охватывает семейство моделей LLaMA?",
+    "type": "simple",
+    "keywords": ["LLaMA", "7B", "65B", "parameters", "range"],
+    "reference_answer": "The LLaMA model family covers parameter sizes from 7 billion to 65 billion."
+  },
+  {
+    "id": 7,
+    "document": "en_llm_survey",
+    "question_en": "What is the relationship between GPT-3 and InstructGPT?",
+    "question_ru": "Какова связь между GPT-3 и InstructGPT?",
+    "type": "relation",
+    "keywords": ["GPT-3", "InstructGPT", "RLHF", "alignment", "fine-tuned"],
+    "reference_answer": "InstructGPT is a fine-tuned version of GPT-3 that uses RLHF to better follow human instructions."
+  },
+  {
+    "id": 8,
+    "document": "en_llm_survey",
+    "question_en": "What is the relationship between BERT and the Transformer architecture?",
+    "question_ru": "Какова связь между BERT и архитектурой Transformer?",
+    "type": "relation",
+    "keywords": ["BERT", "Transformer", "encoder", "bidirectional", "architecture"],
+    "reference_answer": "BERT uses only the encoder part of the Transformer architecture with bidirectional attention for masked language modeling."
+  },
+  {
+    "id": 9,
+    "document": "en_llm_survey",
+    "question_en": "How does the T5 framework relate to the encoder-decoder Transformer?",
+    "question_ru": "Как фреймворк T5 связан с архитектурой encoder-decoder Transformer?",
+    "type": "relation",
+    "keywords": ["T5", "text-to-text", "encoder-decoder", "Transformer", "framework"],
+    "reference_answer": "T5 uses the full encoder-decoder Transformer architecture and reformulates all NLP tasks as text-to-text problems."
+  },
+  {
+    "id": 10,
+    "document": "en_llm_survey",
+    "question_en": "What is the connection between scaling laws and the Chinchilla model?",
+    "question_ru": "Какова связь между законами масштабирования и моделью Chinchilla?",
+    "type": "relation",
+    "keywords": ["scaling laws", "Chinchilla", "compute-optimal", "Kaplan", "training tokens"],
+    "reference_answer": "Chinchilla (2022) revised the scaling laws by Kaplan et al. (2020), showing that models should be trained on more data tokens relative to their parameter count for compute-optimal training."
+  },
+  {
+    "id": 11,
+    "document": "en_llm_survey",
+    "question_en": "How does PaLM 2 relate to the original PaLM model?",
+    "question_ru": "Как PaLM 2 связан с оригинальной моделью PaLM?",
+    "type": "relation",
+    "keywords": ["PaLM", "PaLM 2", "successor", "Google", "improved"],
+    "reference_answer": "PaLM 2 is the successor to PaLM, released in May 2023, featuring improved multilingual and reasoning capabilities."
+  },
+  {
+    "id": 12,
+    "document": "en_llm_survey",
+    "question_en": "What is the relationship between LLaMA and LLaMA 2?",
+    "question_ru": "Какова связь между LLaMA и LLaMA 2?",
+    "type": "relation",
+    "keywords": ["LLaMA", "LLaMA 2", "open-source", "Meta", "July 2023", "February 2023"],
+    "reference_answer": "LLaMA 2 (July 2023) is the successor to LLaMA (February 2023) by Meta, with improved training data and longer context lengths."
+  },
+  {
+    "id": 13,
+    "document": "en_llm_survey",
+    "question_en": "How did the training approach evolve from GPT-1 through InstructGPT to ChatGPT?",
+    "question_ru": "Как эволюционировал подход к обучению от GPT-1 через InstructGPT до ChatGPT?",
+    "type": "multi_hop",
+    "keywords": ["GPT-1", "InstructGPT", "ChatGPT", "RLHF", "pre-training", "fine-tuning", "alignment"],
+    "reference_answer": "GPT-1 introduced unsupervised pre-training with supervised fine-tuning. InstructGPT added RLHF to align the model with human preferences. ChatGPT further refined this approach for conversational interaction."
+  },
+  {
+    "id": 14,
+    "document": "en_llm_survey",
+    "question_en": "How do the parameter counts of BERT, GPT-2, and GPT-3 illustrate the trend of model scaling?",
+    "question_ru": "Как количество параметров BERT, GPT-2 и GPT-3 иллюстрирует тренд масштабирования моделей?",
+    "type": "multi_hop",
+    "keywords": ["BERT", "GPT-2", "GPT-3", "parameters", "scaling", "110M", "1.5B", "175B"],
+    "reference_answer": "BERT (110M/340M), GPT-2 (1.5B), and GPT-3 (175B) show an exponential growth in model parameters, illustrating the scaling trend in large language models."
+  },
+  {
+    "id": 15,
+    "document": "en_llm_survey",
+    "question_en": "How do mixed precision training and ZeRO optimization work together to enable training of models like GPT-3?",
+    "question_ru": "Как смешанная точность обучения и оптимизация ZeRO совместно обеспечивают обучение моделей вроде GPT-3?",
+    "type": "multi_hop",
+    "keywords": ["mixed precision", "ZeRO", "GPT-3", "training", "memory", "parallelism", "infrastructure"],
+    "reference_answer": "Mixed precision training reduces memory by using FP16 for computations while maintaining FP32 master weights. ZeRO partitions optimizer states, gradients, and parameters across GPUs. Together they make training 175B-parameter models like GPT-3 feasible."
+  },
+  {
+    "id": 16,
+    "document": "en_llm_survey",
+    "question_en": "How do the Chinchilla scaling laws explain why LLaMA achieves strong performance despite being smaller than PaLM?",
+    "question_ru": "Как законы масштабирования Chinchilla объясняют, почему LLaMA достигает хороших результатов, будучи меньше PaLM?",
+    "type": "multi_hop",
+    "keywords": ["Chinchilla", "scaling laws", "LLaMA", "PaLM", "compute-optimal", "training tokens", "data"],
+    "reference_answer": "Chinchilla scaling laws showed that training with more tokens relative to model size is compute-optimal. LLaMA followed this principle, training on significantly more tokens than PaLM, achieving strong performance with fewer parameters."
+  },
+  {
+    "id": 17,
+    "document": "en_llm_survey",
+    "question_en": "What role do emergent abilities play in distinguishing large language models from their smaller predecessors like BERT?",
+    "question_ru": "Какую роль играют эмерджентные способности в отличии больших языковых моделей от их меньших предшественников, таких как BERT?",
+    "type": "multi_hop",
+    "keywords": ["emergent abilities", "large language models", "BERT", "in-context learning", "scaling", "capabilities"],
+    "reference_answer": "Emergent abilities such as in-context learning appear only at sufficient scale and are not present in smaller models like BERT. These capabilities arise unpredictably as models grow beyond certain parameter thresholds."
+  },
+  {
+    "id": 18,
+    "document": "en_llm_survey",
+    "question_en": "How does RLHF connect the scaling of GPT-3 with the improved instruction-following of InstructGPT and conversational ability of ChatGPT?",
+    "question_ru": "Как RLHF связывает масштабирование GPT-3 с улучшенным следованием инструкциям InstructGPT и разговорной способностью ChatGPT?",
+    "type": "multi_hop",
+    "keywords": ["RLHF", "GPT-3", "InstructGPT", "ChatGPT", "alignment", "reward model", "human feedback"],
+    "reference_answer": "GPT-3 provided the large-scale pre-trained base. RLHF was then applied to create InstructGPT, using human feedback to train a reward model that guided the model to follow instructions. ChatGPT extended this conversational RLHF approach for dialogue."
+  },
+  {
+    "id": 19,
+    "document": "en_llm_survey",
+    "question_en": "What are the main architectural paradigms for language models discussed in this survey?",
+    "question_ru": "Какие основные архитектурные парадигмы языковых моделей обсуждаются в обзоре?",
+    "type": "global",
+    "keywords": ["encoder-only", "decoder-only", "encoder-decoder", "Transformer", "paradigms", "architecture"],
+    "reference_answer": "The survey discusses three main Transformer-based paradigms: encoder-only (BERT), decoder-only (GPT series), and encoder-decoder (T5) architectures."
+  },
+  {
+    "id": 20,
+    "document": "en_llm_survey",
+    "question_en": "What is the overall narrative of LLM development presented in the survey?",
+    "question_ru": "Какова общая линия развития LLM, представленная в обзоре?",
+    "type": "global",
+    "keywords": ["development", "scaling", "alignment", "pre-training", "RLHF", "Transformer", "evolution"],
+    "reference_answer": "The survey presents a narrative of LLM development moving from the Transformer architecture through aggressive scaling of parameters and data, to alignment techniques like RLHF, culminating in general-purpose conversational AI systems."
+  },
+  {
+    "id": 21,
+    "document": "en_llm_survey",
+    "question_en": "What are the key technical challenges of training large language models highlighted in the survey?",
+    "question_ru": "Какие ключевые технические сложности обучения больших языковых моделей выделяются в обзоре?",
+    "type": "global",
+    "keywords": ["training", "infrastructure", "parallelism", "mixed precision", "ZeRO", "challenges", "compute"],
+    "reference_answer": "Key challenges include massive computational requirements, memory constraints addressed by mixed precision and ZeRO, and the need for tensor and pipeline parallelism across many GPUs."
+  },
+  {
+    "id": 22,
+    "document": "en_llm_survey",
+    "question_en": "How does the survey characterize the shift from task-specific to general-purpose language models?",
+    "question_ru": "Как обзор характеризует переход от узкоспециализированных к универсальным языковым моделям?",
+    "type": "global",
+    "keywords": ["task-specific", "general-purpose", "pre-training", "fine-tuning", "in-context learning", "emergent"],
+    "reference_answer": "The survey shows a shift from fine-tuning separate models for each task (BERT era) to general-purpose models capable of in-context learning and emergent abilities across diverse tasks without task-specific training."
+  },
+  {
+    "id": 23,
+    "document": "en_llm_survey",
+    "question_en": "What role does the open-source movement play in LLM development according to the survey?",
+    "question_ru": "Какую роль играет движение открытого кода в развитии LLM согласно обзору?",
+    "type": "global",
+    "keywords": ["open-source", "LLaMA", "Meta", "democratization", "accessibility", "research"],
+    "reference_answer": "The survey highlights the open-source movement through models like LLaMA as a crucial factor in democratizing LLM research and making powerful models accessible beyond large corporations."
+  },
+  {
+    "id": 24,
+    "document": "en_llm_survey",
+    "question_en": "What are the main alignment and safety considerations discussed across the survey?",
+    "question_ru": "Какие основные вопросы выравнивания и безопасности обсуждаются в обзоре?",
+    "type": "global",
+    "keywords": ["alignment", "safety", "RLHF", "human feedback", "InstructGPT", "ChatGPT", "reward model"],
+    "reference_answer": "The survey discusses RLHF as the primary alignment technique, using human feedback to train reward models that guide LLMs toward helpful, harmless, and honest outputs, as implemented in InstructGPT and ChatGPT."
+  },
+  {
+    "id": 25,
+    "document": "en_llm_survey",
+    "question_en": "What happened in June 2017 that transformed the field of NLP?",
+    "question_ru": "Что произошло в июне 2017 года, что трансформировало область NLP?",
+    "type": "temporal",
+    "keywords": ["June 2017", "Transformer", "Vaswani", "Attention Is All You Need", "self-attention"],
+    "reference_answer": "In June 2017, Vaswani et al. published 'Attention Is All You Need', introducing the Transformer architecture based on self-attention, which revolutionized NLP."
+  },
+  {
+    "id": 26,
+    "document": "en_llm_survey",
+    "question_en": "What major language models were released in 2022?",
+    "question_ru": "Какие крупные языковые модели были выпущены в 2022 году?",
+    "type": "temporal",
+    "keywords": ["2022", "InstructGPT", "PaLM", "ChatGPT", "Chinchilla", "March", "April", "November"],
+    "reference_answer": "In 2022, InstructGPT (March), PaLM (April), Chinchilla scaling laws, and ChatGPT (November 30) were released."
+  },
+  {
+    "id": 27,
+    "document": "en_llm_survey",
+    "question_en": "How did language model capabilities evolve between 2018 and 2020?",
+    "question_ru": "Как эволюционировали возможности языковых моделей между 2018 и 2020 годами?",
+    "type": "temporal",
+    "keywords": ["2018", "2019", "2020", "GPT-1", "BERT", "GPT-2", "T5", "GPT-3", "evolution"],
+    "reference_answer": "From 2018 to 2020: GPT-1 (June 2018, 117M) and BERT (Oct 2018, 110M) introduced pre-training. GPT-2 (Feb 2019, 1.5B) and T5 (2019) scaled up. GPT-3 (May 2020, 175B) demonstrated emergent abilities and in-context learning."
+  },
+  {
+    "id": 28,
+    "document": "en_llm_survey",
+    "question_en": "What events in February and March 2023 marked milestones in LLM development?",
+    "question_ru": "Какие события в феврале и марте 2023 года стали вехами в развитии LLM?",
+    "type": "temporal",
+    "keywords": ["February 2023", "March 2023", "LLaMA", "GPT-4", "Meta", "OpenAI"],
+    "reference_answer": "In February 2023, Meta released LLaMA (7B-65B), making powerful open models available. In March 2023, OpenAI released GPT-4, a major multimodal advancement."
+  },
+  {
+    "id": 29,
+    "document": "en_llm_survey",
+    "question_en": "How did the understanding of optimal model scaling change between 2020 and 2022?",
+    "question_ru": "Как изменилось понимание оптимального масштабирования моделей между 2020 и 2022 годами?",
+    "type": "temporal",
+    "keywords": ["scaling laws", "Kaplan", "2020", "Chinchilla", "2022", "compute-optimal", "tokens"],
+    "reference_answer": "In 2020, Kaplan et al. proposed scaling laws favoring larger models. In 2022, the Chinchilla paper revised these laws, showing that models should be trained on proportionally more data tokens for compute-optimal performance."
+  },
+  {
+    "id": 30,
+    "document": "en_llm_survey",
+    "question_en": "What was the timeline of the GPT series from GPT-1 to GPT-4?",
+    "question_ru": "Какова хронология серии GPT от GPT-1 до GPT-4?",
+    "type": "temporal",
+    "keywords": ["GPT-1", "GPT-2", "GPT-3", "GPT-4", "2018", "2019", "2020", "2023", "timeline"],
+    "reference_answer": "GPT-1 (June 2018, 117M params), GPT-2 (February 2019, 1.5B), GPT-3 (May 2020, 175B), InstructGPT (March 2022), ChatGPT (November 2022), GPT-4 (March 2023)."
+  },
+  {
+    "id": 31,
+    "document": "ru_graph_kb",
+    "question_en": "When was Neo4j first released?",
+    "question_ru": "Когда был впервые выпущен Neo4j?",
+    "type": "simple",
+    "keywords": ["Neo4j", "2007", "Property Graph", "графовая база"],
+    "reference_answer": "Neo4j was first released in 2007 as a Property Graph database."
+  },
+  {
+    "id": 32,
+    "document": "ru_graph_kb",
+    "question_en": "How many entities did the Google Knowledge Graph contain at launch?",
+    "question_ru": "Сколько сущностей содержал Google Knowledge Graph при запуске?",
+    "type": "simple",
+    "keywords": ["Google Knowledge Graph", "570", "миллионов", "сущностей", "entities"],
+    "reference_answer": "The Google Knowledge Graph contained 570 million entities at launch in 2012."
+  },
+  {
+    "id": 33,
+    "document": "ru_graph_kb",
+    "question_en": "When was the RDF 1.0 specification published by W3C?",
+    "question_ru": "Когда спецификация RDF 1.0 была опубликована W3C?",
+    "type": "simple",
+    "keywords": ["RDF", "W3C", "1999", "спецификация", "Resource Description Framework"],
+    "reference_answer": "RDF 1.0 was published by W3C in 1999."
+  },
+  {
+    "id": 34,
+    "document": "ru_graph_kb",
+    "question_en": "What year was the OWL ontology language standardized?",
+    "question_ru": "В каком году был стандартизирован язык онтологий OWL?",
+    "type": "simple",
+    "keywords": ["OWL", "2004", "онтологий", "стандарт", "Web Ontology Language"],
+    "reference_answer": "OWL was standardized in 2004."
+  },
+  {
+    "id": 35,
+    "document": "ru_graph_kb",
+    "question_en": "When was the TransE embedding model introduced?",
+    "question_ru": "Когда была представлена модель эмбеддингов TransE?",
+    "type": "simple",
+    "keywords": ["TransE", "2013", "эмбеддинг", "embedding", "knowledge graph"],
+    "reference_answer": "TransE was introduced in 2013 as one of the first knowledge graph embedding models."
+  },
+  {
+    "id": 36,
+    "document": "ru_graph_kb",
+    "question_en": "When was the GQL ISO standard adopted?",
+    "question_ru": "Когда был принят стандарт GQL ISO?",
+    "type": "simple",
+    "keywords": ["GQL", "ISO", "2024", "стандарт", "язык запросов"],
+    "reference_answer": "The GQL ISO standard was adopted in 2024."
+  },
+  {
+    "id": 37,
+    "document": "ru_graph_kb",
+    "question_en": "What is the relationship between the CODASYL model and modern graph databases?",
+    "question_ru": "Какова связь между моделью CODASYL и современными графовыми базами данных?",
+    "type": "relation",
+    "keywords": ["CODASYL", "1969", "графовые базы", "навигационная модель", "сетевая модель", "предшественник"],
+    "reference_answer": "CODASYL (1969) was a navigational/network data model that served as a historical predecessor to modern graph databases, representing data as nodes and relationships."
+  },
+  {
+    "id": 38,
+    "document": "ru_graph_kb",
+    "question_en": "How does RDF relate to the Semantic Web vision?",
+    "question_ru": "Как RDF связан с концепцией Семантического Веба?",
+    "type": "relation",
+    "keywords": ["RDF", "Semantic Web", "Berners-Lee", "триплеты", "семантический", "2001"],
+    "reference_answer": "RDF is the foundational data model for the Semantic Web vision proposed by Berners-Lee in 2001, using subject-predicate-object triples to enable machine-readable linked data."
+  },
+  {
+    "id": 39,
+    "document": "ru_graph_kb",
+    "question_en": "What is the relationship between Cypher and Neo4j?",
+    "question_ru": "Какова связь между Cypher и Neo4j?",
+    "type": "relation",
+    "keywords": ["Cypher", "Neo4j", "язык запросов", "Property Graph", "2012", "декларативный"],
+    "reference_answer": "Cypher is the declarative query language developed specifically for Neo4j in 2012, designed for pattern matching on Property Graph data."
+  },
+  {
+    "id": 40,
+    "document": "ru_graph_kb",
+    "question_en": "How do TransE and TransR relate to each other in the evolution of KG embeddings?",
+    "question_ru": "Как TransE и TransR связаны друг с другом в эволюции эмбеддингов графов знаний?",
+    "type": "relation",
+    "keywords": ["TransE", "TransR", "2013", "2014", "эмбеддинг", "пространство отношений", "трансляция"],
+    "reference_answer": "TransR (2014) extends TransE (2013) by introducing relation-specific spaces, projecting entities into different spaces for different relations rather than using a single embedding space."
+  },
+  {
+    "id": 41,
+    "document": "ru_graph_kb",
+    "question_en": "What is the relationship between SPARQL and RDF?",
+    "question_ru": "Какова связь между SPARQL и RDF?",
+    "type": "relation",
+    "keywords": ["SPARQL", "RDF", "язык запросов", "2008", "триплеты", "граф"],
+    "reference_answer": "SPARQL (standardized in 2008) is the standard query language specifically designed for querying RDF graph data using triple pattern matching."
+  },
+  {
+    "id": 42,
+    "document": "ru_graph_kb",
+    "question_en": "How does GraphRAG by Microsoft relate to traditional knowledge graphs?",
+    "question_ru": "Как GraphRAG от Microsoft связан с традиционными графами знаний?",
+    "type": "relation",
+    "keywords": ["GraphRAG", "Microsoft", "2024", "граф знаний", "RAG", "поиск", "LLM"],
+    "reference_answer": "GraphRAG (Microsoft, 2024) combines traditional knowledge graph structures with RAG retrieval, using graph-based indexing to improve LLM context retrieval beyond simple vector search."
+  },
+  {
+    "id": 43,
+    "document": "ru_graph_kb",
+    "question_en": "How did the evolution from CODASYL through the relational model to property graphs shape modern knowledge representation?",
+    "question_ru": "Как эволюция от CODASYL через реляционную модель к property graph повлияла на современное представление знаний?",
+    "type": "multi_hop",
+    "keywords": ["CODASYL", "1969", "Codd", "1970", "реляционная модель", "Property Graph", "Neo4j", "знания"],
+    "reference_answer": "CODASYL (1969) used navigational network models. Codd's relational model (1970) shifted to tabular data. Property graphs (Neo4j 2007) brought back graph-style navigation with modern features like properties on edges, combining the best of both approaches."
+  },
+  {
+    "id": 44,
+    "document": "ru_graph_kb",
+    "question_en": "How do embedding methods TransE and RotatE address different types of graph relations?",
+    "question_ru": "Как методы эмбеддингов TransE и RotatE обрабатывают различные типы отношений в графах?",
+    "type": "multi_hop",
+    "keywords": ["TransE", "RotatE", "2013", "2019", "отношения", "симметричные", "вращение", "комплексное пространство"],
+    "reference_answer": "TransE (2013) models relations as translations in embedding space but struggles with symmetric and many-to-many relations. RotatE (2019) addresses this by modeling relations as rotations in complex space, naturally handling symmetry, antisymmetry, inversion, and composition patterns."
+  },
+  {
+    "id": 45,
+    "document": "ru_graph_kb",
+    "question_en": "How do R-GCN and CompGCN build upon each other for multi-relational graph learning?",
+    "question_ru": "Как R-GCN и CompGCN дополняют друг друга в обучении на мультиреляционных графах?",
+    "type": "multi_hop",
+    "keywords": ["R-GCN", "CompGCN", "2017", "2019", "GNN", "мультиреляционный", "нейросеть"],
+    "reference_answer": "R-GCN (2017) introduced relation-specific weight matrices for graph neural networks on multi-relational data. CompGCN (2019) improved upon this by jointly embedding both entities and relations, reducing parameters while capturing complex relational patterns."
+  },
+  {
+    "id": 46,
+    "document": "ru_graph_kb",
+    "question_en": "How do Neo4j's Cypher and Apache TinkerPop's Gremlin represent different approaches to graph querying?",
+    "question_ru": "Как Cypher от Neo4j и Gremlin от Apache TinkerPop представляют разные подходы к запросам графов?",
+    "type": "multi_hop",
+    "keywords": ["Cypher", "Gremlin", "Neo4j", "TinkerPop", "декларативный", "императивный", "запросы"],
+    "reference_answer": "Cypher (Neo4j, 2012) is declarative, using ASCII-art pattern matching for Property Graphs. Gremlin (TinkerPop, 2009) is imperative/traversal-based, using step-by-step graph traversal commands. They represent different query paradigms for graph databases."
+  },
+  {
+    "id": 47,
+    "document": "ru_graph_kb",
+    "question_en": "How does the Google Knowledge Graph use Wikidata to enhance search capabilities?",
+    "question_ru": "Как Google Knowledge Graph использует Wikidata для улучшения поисковых возможностей?",
+    "type": "multi_hop",
+    "keywords": ["Google Knowledge Graph", "Wikidata", "2012", "сущности", "поиск", "структурированные данные"],
+    "reference_answer": "Both launched in 2012, Google Knowledge Graph (570M entities) and Wikidata serve as large-scale knowledge bases. Google KG integrates structured data including from Wikidata to provide entity panels and semantic search results."
+  },
+  {
+    "id": 48,
+    "document": "ru_graph_kb",
+    "question_en": "How do GraphRAG, Graphiti, and Cognee represent the 2024 convergence of graphs and LLMs?",
+    "question_ru": "Как GraphRAG, Graphiti и Cognee представляют конвергенцию графов и LLM в 2024 году?",
+    "type": "multi_hop",
+    "keywords": ["GraphRAG", "Graphiti", "Cognee", "2024", "LLM", "граф знаний", "RAG"],
+    "reference_answer": "GraphRAG (Microsoft), Graphiti, and Cognee — all released in 2024 — represent the convergence of knowledge graphs with LLMs, each offering different approaches to graph-augmented retrieval and semantic memory for AI systems."
+  },
+  {
+    "id": 49,
+    "document": "ru_graph_kb",
+    "question_en": "What are the main categories of graph database applications discussed in the document?",
+    "question_ru": "Какие основные категории применений графовых баз данных обсуждаются в документе?",
+    "type": "global",
+    "keywords": ["рекомендации", "fraud detection", "биомедицина", "применения", "граф знаний", "мошенничество"],
+    "reference_answer": "The document discusses recommendations, fraud detection, and biomedicine as the main application categories for graph databases and knowledge graphs."
+  },
+  {
+    "id": 50,
+    "document": "ru_graph_kb",
+    "question_en": "What major graph database systems are compared in the document?",
+    "question_ru": "Какие основные системы графовых баз данных сравниваются в документе?",
+    "type": "global",
+    "keywords": ["Neo4j", "ArangoDB", "Neptune", "Dgraph", "TigerGraph", "сравнение", "графовые базы"],
+    "reference_answer": "The document compares Neo4j, ArangoDB, Neptune (AWS), Dgraph, and TigerGraph as major graph database systems."
+  },
+  {
+    "id": 51,
+    "document": "ru_graph_kb",
+    "question_en": "What is the overall evolution of knowledge representation described in the document?",
+    "question_ru": "Какова общая эволюция представления знаний, описанная в документе?",
+    "type": "global",
+    "keywords": ["эволюция", "CODASYL", "реляционная", "RDF", "Semantic Web", "Property Graph", "графы знаний"],
+    "reference_answer": "The document traces knowledge representation from CODASYL (1969) and the relational model (1970), through RDF/Semantic Web (1999-2001), to modern Property Graphs (2007+) and contemporary knowledge graph systems."
+  },
+  {
+    "id": 52,
+    "document": "ru_graph_kb",
+    "question_en": "How does the document characterize the relationship between traditional graph databases and modern AI?",
+    "question_ru": "Как документ характеризует связь между традиционными графовыми базами данных и современным ИИ?",
+    "type": "global",
+    "keywords": ["графовые базы", "искусственный интеллект", "GNN", "embeddings", "GraphRAG", "нейросети"],
+    "reference_answer": "The document shows how traditional graph databases evolved to integrate with AI through KG embeddings (TransE, RotatE), graph neural networks (R-GCN, CompGCN), and ultimately LLM-integrated systems like GraphRAG."
+  },
+  {
+    "id": 53,
+    "document": "ru_graph_kb",
+    "question_en": "What query language paradigms for graph data are discussed in the document?",
+    "question_ru": "Какие парадигмы языков запросов для графовых данных обсуждаются в документе?",
+    "type": "global",
+    "keywords": ["Cypher", "Gremlin", "SPARQL", "GQL", "язык запросов", "декларативный", "императивный"],
+    "reference_answer": "The document discusses Cypher (declarative, 2012), Gremlin (imperative traversal, 2009), SPARQL (RDF pattern matching, 2008), and GQL (ISO standard, 2024) as the main graph query language paradigms."
+  },
+  {
+    "id": 54,
+    "document": "ru_graph_kb",
+    "question_en": "What is the overall significance of knowledge graphs in the modern data landscape according to the document?",
+    "question_ru": "Каково общее значение графов знаний в современном ландшафте данных согласно документу?",
+    "type": "global",
+    "keywords": ["графы знаний", "данные", "семантика", "связи", "интеграция", "приложения"],
+    "reference_answer": "The document presents knowledge graphs as a unifying paradigm for representing complex interconnected data with semantic meaning, bridging structured databases, AI systems, and domain-specific applications."
+  },
+  {
+    "id": 55,
+    "document": "ru_graph_kb",
+    "question_en": "What happened in 2007 in the field of graph databases?",
+    "question_ru": "Что произошло в 2007 году в области графовых баз данных?",
+    "type": "temporal",
+    "keywords": ["2007", "Neo4j", "Property Graph", "графовая база", "первый"],
+    "reference_answer": "In 2007, Neo4j was released as the first major Property Graph database, marking the beginning of the modern graph database era."
+  },
+  {
+    "id": 56,
+    "document": "ru_graph_kb",
+    "question_en": "How did graph technologies develop between 2008 and 2012?",
+    "question_ru": "Как развивались графовые технологии между 2008 и 2012 годами?",
+    "type": "temporal",
+    "keywords": ["2008", "2009", "2010", "2012", "SPARQL", "Gremlin", "TinkerPop", "Cypher", "Google Knowledge Graph"],
+    "reference_answer": "SPARQL was standardized (2008), Gremlin was introduced (2009), Apache TinkerPop was created (2010), and in 2012 both Google Knowledge Graph and Wikidata launched alongside the Cypher query language."
+  },
+  {
+    "id": 57,
+    "document": "ru_graph_kb",
+    "question_en": "What is the chronological evolution of knowledge graph embedding methods from 2013 to 2019?",
+    "question_ru": "Какова хронологическая эволюция методов эмбеддингов графов знаний с 2013 по 2019 год?",
+    "type": "temporal",
+    "keywords": ["TransE", "2013", "TransR", "2014", "RotatE", "2019", "эмбеддинг", "эволюция"],
+    "reference_answer": "TransE (2013) introduced translational embeddings. TransR (2014) added relation-specific spaces. RotatE (2019) modeled relations as rotations in complex space for better pattern handling."
+  },
+  {
+    "id": 58,
+    "document": "ru_graph_kb",
+    "question_en": "What were the key developments in the Semantic Web between 1999 and 2008?",
+    "question_ru": "Какие ключевые события произошли в области Семантического Веба между 1999 и 2008 годами?",
+    "type": "temporal",
+    "keywords": ["1999", "RDF", "2001", "Semantic Web", "Berners-Lee", "2004", "OWL", "2008", "SPARQL"],
+    "reference_answer": "RDF 1.0 was published (1999), Berners-Lee proposed the Semantic Web vision (2001), OWL was standardized (2004), and SPARQL became the standard RDF query language (2008)."
+  },
+  {
+    "id": 59,
+    "document": "ru_graph_kb",
+    "question_en": "What major graph and knowledge graph technologies emerged in 2024?",
+    "question_ru": "Какие крупные графовые технологии и технологии графов знаний появились в 2024 году?",
+    "type": "temporal",
+    "keywords": ["2024", "GraphRAG", "Microsoft", "Graphiti", "Cognee", "GQL", "ISO"],
+    "reference_answer": "In 2024, GraphRAG (Microsoft), Graphiti, and Cognee were released for LLM-graph integration, and the GQL ISO standard for graph query languages was adopted."
+  },
+  {
+    "id": 60,
+    "document": "ru_graph_kb",
+    "question_en": "How did graph neural networks for knowledge graphs develop between 2017 and 2019?",
+    "question_ru": "Как развивались графовые нейронные сети для графов знаний между 2017 и 2019 годами?",
+    "type": "temporal",
+    "keywords": ["R-GCN", "2017", "CompGCN", "2019", "GNN", "графовые нейронные сети", "мультиреляционный"],
+    "reference_answer": "R-GCN (2017) introduced relation-specific graph convolutions for multi-relational data. CompGCN (2019) improved this by jointly learning entity and relation embeddings with composition operators."
+  }
+]
