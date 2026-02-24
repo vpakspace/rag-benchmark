@@ -3,12 +3,12 @@
 from __future__ import annotations
 
 import logging
-import sys
 import time
 from pathlib import Path
 from types import ModuleType
 
 from adapters.base import BaseAdapter, IngestResult, QueryResult
+from adapters._import_utils import prepare_imports
 
 logger = logging.getLogger(__name__)
 
@@ -16,12 +16,10 @@ RAG2_PATH = Path.home() / "rag-2.0"
 
 
 def _import_rag2() -> ModuleType:
-    """Import rag-2.0 modules via sys.path bridge."""
+    """Import rag-2.0 modules with isolated sys.path."""
     import importlib
 
-    project = str(RAG2_PATH)
-    if project not in sys.path:
-        sys.path.insert(0, project)
+    prepare_imports(str(RAG2_PATH))
 
     mod = ModuleType("rag2_bridge")
     mod.load_file = importlib.import_module("ingestion.loader").load_file

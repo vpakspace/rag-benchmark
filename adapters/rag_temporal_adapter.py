@@ -3,12 +3,12 @@
 from __future__ import annotations
 
 import logging
-import sys
 import time
 from pathlib import Path
 from types import ModuleType
 
 from adapters.base import BaseAdapter, IngestResult, QueryResult
+from adapters._import_utils import prepare_imports
 
 logger = logging.getLogger(__name__)
 
@@ -17,13 +17,14 @@ RAG2_PATH = Path.home() / "rag-2.0"
 
 
 def _import_rt() -> ModuleType:
-    """Import rag-temporal modules via sys.path bridge."""
+    """Import rag-temporal modules with isolated sys.path.
+
+    rag-temporal uses bridge modules to re-export from rag-2.0,
+    so both project paths must be available.
+    """
     import importlib
 
-    # rag-temporal needs rag-2.0 on path (bridge modules handle the rest)
-    for p in [str(RT_PATH), str(RAG2_PATH)]:
-        if p not in sys.path:
-            sys.path.insert(0, p)
+    prepare_imports(str(RT_PATH), extra_paths=[str(RAG2_PATH)])
 
     mod = ModuleType("rt_bridge")
     mod.DualPipeline = importlib.import_module("ingestion.dual_pipeline").DualPipeline
@@ -85,7 +86,6 @@ class RAGTemporalAdapter(BaseAdapter):
                     latency=latency,
                 )
             else:
-                # vector, kg, hybrid — all via HybridRetriever
                 results = self._retriever.retrieve(question, mode=mode)
                 qa = self._mod.generate_answer(question, results)
                 latency = round(time.monotonic() - start, 3)

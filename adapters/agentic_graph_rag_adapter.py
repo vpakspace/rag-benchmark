@@ -3,25 +3,26 @@
 from __future__ import annotations
 
 import logging
-import sys
 import time
 from pathlib import Path
 from types import ModuleType
 
+from neo4j import GraphDatabase
+
 from adapters.base import BaseAdapter, IngestResult, QueryResult
+from adapters._import_utils import prepare_imports
 
 logger = logging.getLogger(__name__)
 
 AGR_PATH = Path.home() / "agentic-graph-rag"
+AGR_RAG_CORE = AGR_PATH / "packages" / "rag-core"
 
 
 def _import_agr() -> ModuleType:
-    """Import agentic-graph-rag modules via sys.path bridge."""
+    """Import agentic-graph-rag modules with isolated sys.path."""
     import importlib
 
-    project = str(AGR_PATH)
-    if project not in sys.path:
-        sys.path.insert(0, project)
+    prepare_imports(str(AGR_PATH), extra_paths=[str(AGR_RAG_CORE)])
 
     mod = ModuleType("agr_bridge")
     # rag_core modules for ingestion
@@ -29,6 +30,9 @@ def _import_agr() -> ModuleType:
     mod.chunk_text = importlib.import_module("rag_core.chunker").chunk_text
     mod.enrich_chunks = importlib.import_module("rag_core.enricher").enrich_chunks
     mod.embed_chunks = importlib.import_module("rag_core.embedder").embed_chunks
+    # Config and client factories
+    mod.get_settings = importlib.import_module("rag_core.config").get_settings
+    mod.make_openai_client = importlib.import_module("rag_core.config").make_openai_client
     # Dual-node indexing
     dual = importlib.import_module("agentic_graph_rag.indexing.dual_node")
     mod.create_passage_nodes = dual.create_passage_nodes
@@ -48,10 +52,18 @@ class AgenticGraphRAGAdapter(BaseAdapter):
     def __init__(self) -> None:
         self._mod = None
         self._service = None
+        self._driver = None
 
     def setup(self) -> None:
         self._mod = _import_agr()
-        self._service = self._mod.PipelineService()
+        # PipelineService requires driver and openai_client
+        cfg = self._mod.get_settings()
+        self._driver = GraphDatabase.driver(
+            cfg.neo4j.uri,
+            auth=(cfg.neo4j.user, cfg.neo4j.password),
+        )
+        client = self._mod.make_openai_client(cfg)
+        self._service = self._mod.PipelineService(self._driver, client)
 
     def ingest(self, file_path: str) -> IngestResult:
         start = time.monotonic()
@@ -99,6 +111,8 @@ class AgenticGraphRAGAdapter(BaseAdapter):
     def cleanup(self) -> None:
         if self._service and hasattr(self._service, "clear"):
             self._service.clear()
+        if self._driver:
+            self._driver.close()
 
     def health_check(self) -> bool:
         return AGR_PATH.exists()

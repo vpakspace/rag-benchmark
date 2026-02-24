@@ -15,8 +15,9 @@ class TestAgenticGraphRAGAdapter:
         assert "agent_llm" in adapter.modes
         assert "neo4j" in adapter.requires_services
 
+    @patch("adapters.agentic_graph_rag_adapter.GraphDatabase")
     @patch("adapters.agentic_graph_rag_adapter._import_agr")
-    def test_ingest(self, mock_import):
+    def test_ingest(self, mock_import, mock_gdb):
         mock_mod = MagicMock()
         mock_mod.load_file.return_value = "text"
         mock_mod.chunk_text.return_value = [MagicMock()]
@@ -24,6 +25,9 @@ class TestAgenticGraphRAGAdapter:
         mock_mod.embed_chunks.return_value = [MagicMock()]
         mock_mod.create_passage_nodes.return_value = 1
         mock_mod.create_phrase_nodes.return_value = 2
+        mock_mod.get_settings.return_value.neo4j.uri = "bolt://localhost:7687"
+        mock_mod.get_settings.return_value.neo4j.user = "neo4j"
+        mock_mod.get_settings.return_value.neo4j.password = "test"
         mock_import.return_value = mock_mod
 
         adapter = AgenticGraphRAGAdapter()
@@ -33,11 +37,15 @@ class TestAgenticGraphRAGAdapter:
         assert result.success is True
         assert result.adapter == "agentic_graph_rag"
 
+    @patch("adapters.agentic_graph_rag_adapter.GraphDatabase")
     @patch("adapters.agentic_graph_rag_adapter._import_agr")
-    def test_query_agent_pattern(self, mock_import):
+    def test_query_agent_pattern(self, mock_import, mock_gdb):
         mock_mod = MagicMock()
         qa = MagicMock(answer="pattern answer", confidence=0.8, retries=0)
         mock_mod.PipelineService.return_value.query.return_value = qa
+        mock_mod.get_settings.return_value.neo4j.uri = "bolt://localhost:7687"
+        mock_mod.get_settings.return_value.neo4j.user = "neo4j"
+        mock_mod.get_settings.return_value.neo4j.password = "test"
         mock_import.return_value = mock_mod
 
         adapter = AgenticGraphRAGAdapter()
@@ -46,11 +54,15 @@ class TestAgenticGraphRAGAdapter:
 
         assert result.answer == "pattern answer"
 
+    @patch("adapters.agentic_graph_rag_adapter.GraphDatabase")
     @patch("adapters.agentic_graph_rag_adapter._import_agr")
-    def test_query_agent_llm(self, mock_import):
+    def test_query_agent_llm(self, mock_import, mock_gdb):
         mock_mod = MagicMock()
         qa = MagicMock(answer="llm answer", confidence=0.9, retries=0)
         mock_mod.PipelineService.return_value.query.return_value = qa
+        mock_mod.get_settings.return_value.neo4j.uri = "bolt://localhost:7687"
+        mock_mod.get_settings.return_value.neo4j.user = "neo4j"
+        mock_mod.get_settings.return_value.neo4j.password = "test"
         mock_import.return_value = mock_mod
 
         adapter = AgenticGraphRAGAdapter()
@@ -59,9 +71,13 @@ class TestAgenticGraphRAGAdapter:
 
         assert result.answer == "llm answer"
 
+    @patch("adapters.agentic_graph_rag_adapter.GraphDatabase")
     @patch("adapters.agentic_graph_rag_adapter._import_agr")
-    def test_cleanup(self, mock_import):
+    def test_cleanup(self, mock_import, mock_gdb):
         mock_mod = MagicMock()
+        mock_mod.get_settings.return_value.neo4j.uri = "bolt://localhost:7687"
+        mock_mod.get_settings.return_value.neo4j.user = "neo4j"
+        mock_mod.get_settings.return_value.neo4j.password = "test"
         mock_import.return_value = mock_mod
 
         adapter = AgenticGraphRAGAdapter()

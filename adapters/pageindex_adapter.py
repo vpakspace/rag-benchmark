@@ -3,12 +3,12 @@
 from __future__ import annotations
 
 import logging
-import sys
 import time
 from pathlib import Path
 from types import ModuleType
 
 from adapters.base import BaseAdapter, IngestResult, QueryResult
+from adapters._import_utils import prepare_imports
 
 logger = logging.getLogger(__name__)
 
@@ -16,18 +16,10 @@ PAGEINDEX_PATH = Path.home() / "pageindex"
 
 
 def _import_pageindex() -> ModuleType:
-    """Import pageindex modules via sys.path bridge."""
+    """Import pageindex modules with isolated sys.path."""
     import importlib
 
-    project = str(PAGEINDEX_PATH)
-    if project not in sys.path:
-        sys.path.insert(0, project)
-
-    # Clean cached modules to avoid stale imports
-    for key in list(sys.modules.keys()):
-        if key.startswith(("indexing.", "reasoning.", "storage.")):
-            if PAGEINDEX_PATH.name in getattr(sys.modules[key], "__file__", ""):
-                del sys.modules[key]
+    prepare_imports(str(PAGEINDEX_PATH))
 
     mod = ModuleType("pageindex_bridge")
     mod.load_file = importlib.import_module("indexing.loader").load_file
@@ -43,7 +35,7 @@ class PageIndexAdapter(BaseAdapter):
     project_path = str(PAGEINDEX_PATH)
     modes = ["tree_reasoning"]
     supported_langs = ["en", "ru"]
-    requires_services = []  # No external services — local JSON store
+    requires_services = []
 
     def __init__(self) -> None:
         self._mod = None
@@ -61,7 +53,6 @@ class PageIndexAdapter(BaseAdapter):
             tree = self._mod.summarize_tree(tree)
             doc_id = self._store.save(tree)
             duration = round(time.monotonic() - start, 3)
-            # Count nodes as "chunks" equivalent
             node_count = len(getattr(tree, "nodes", [])) or 1
             return IngestResult(
                 adapter=self.name, document=Path(file_path).name,

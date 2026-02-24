@@ -4,12 +4,12 @@ from __future__ import annotations
 
 import asyncio
 import logging
-import sys
 import time
 from pathlib import Path
 from types import ModuleType
 
 from adapters.base import BaseAdapter, IngestResult, QueryResult
+from adapters._import_utils import prepare_imports
 
 logger = logging.getLogger(__name__)
 
@@ -24,7 +24,6 @@ def _run_async(coro):
         loop = None
 
     if loop and loop.is_running():
-        # Already inside an event loop — create a new one in a thread
         import concurrent.futures
         with concurrent.futures.ThreadPoolExecutor() as pool:
             return pool.submit(asyncio.run, coro).result()
@@ -33,20 +32,27 @@ def _run_async(coro):
 
 
 def _import_tkb() -> ModuleType:
-    """Import temporal-knowledge-base modules via sys.path bridge."""
+    """Import temporal-knowledge-base modules with isolated sys.path."""
     import importlib
 
-    project = str(TKB_PATH)
-    if project not in sys.path:
-        sys.path.insert(0, project)
+    prepare_imports(str(TKB_PATH))
 
     mod = ModuleType("tkb_bridge")
-    mod.IngestionPipeline = importlib.import_module("ingestion.pipeline").IngestionPipeline
-    mod.QueryEngine = importlib.import_module("retrieval.query_engine").QueryEngine
-    mod.ResponseBuilder = importlib.import_module("generation.response_builder").ResponseBuilder
+    # Core
     mod.get_settings = importlib.import_module("core.config").get_settings
     mod.SearchQuery = importlib.import_module("core.models").SearchQuery
     mod.IntentType = importlib.import_module("core.models").IntentType
+    # Components for building the pipeline
+    mod.Neo4jClient = importlib.import_module("storage.neo4j_client").Neo4jClient
+    mod.VectorStore = importlib.import_module("storage.vector_store").VectorStore
+    mod.LLMClient = importlib.import_module("generation.llm_client").LLMClient
+    mod.TemporalVerifier = importlib.import_module("generation.temporal_verifier").TemporalVerifier
+    mod.ResponseBuilder = importlib.import_module("generation.response_builder").ResponseBuilder
+    mod.GraphitiClient = importlib.import_module("graphiti_adapter.client").GraphitiClient
+    mod.EntityResolver = importlib.import_module("temporal.resolution").EntityResolver
+    mod.InvalidationAgent = importlib.import_module("temporal.invalidation_agent").InvalidationAgent
+    mod.IngestionPipeline = importlib.import_module("ingestion.pipeline").IngestionPipeline
+    mod.QueryEngine = importlib.import_module("retrieval.query_engine").QueryEngine
     return mod
 
 
@@ -73,10 +79,30 @@ class TemporalKBAdapter(BaseAdapter):
 
     def setup(self) -> None:
         self._mod = _import_tkb()
-        # Components are initialized but connections deferred to first use
-        self._pipeline = self._mod.IngestionPipeline()
-        self._query_engine = self._mod.QueryEngine()
-        self._response_builder = self._mod.ResponseBuilder()
+        settings = self._mod.get_settings()
+
+        # Build component graph (same order as api/server.py)
+        neo4j = self._mod.Neo4jClient(settings.neo4j)
+        _run_async(neo4j.connect())
+
+        vector_store = self._mod.VectorStore(settings.openai)
+        llm = self._mod.LLMClient(settings.openai)
+        graphiti = self._mod.GraphitiClient(settings)
+        _run_async(graphiti.connect())
+
+        entity_resolver = self._mod.EntityResolver(neo4j, vector_store)
+        invalidation_agent = self._mod.InvalidationAgent(
+            neo4j, vector_store, llm, settings,
+        )
+        verifier = self._mod.TemporalVerifier(neo4j)
+
+        self._pipeline = self._mod.IngestionPipeline(
+            graphiti=graphiti, neo4j=neo4j, vector_store=vector_store,
+            llm=llm, invalidation_agent=invalidation_agent,
+            entity_resolver=entity_resolver, settings=settings,
+        )
+        self._query_engine = self._mod.QueryEngine(graphiti, neo4j, llm)
+        self._response_builder = self._mod.ResponseBuilder(llm, verifier)
 
     def ingest(self, file_path: str) -> IngestResult:
         start = time.monotonic()
@@ -119,7 +145,7 @@ class TemporalKBAdapter(BaseAdapter):
             return QueryResult(
                 adapter=self.name, mode=mode, question_id=0,
                 answer=answer,
-                confidence=0.7,  # TKB doesn't return confidence directly
+                confidence=0.7,
                 latency=latency,
             )
         except Exception as e:
@@ -131,7 +157,6 @@ class TemporalKBAdapter(BaseAdapter):
             )
 
     def cleanup(self) -> None:
-        # TKB uses Graphiti — no simple clear method
         pass
 
     def health_check(self) -> bool:
