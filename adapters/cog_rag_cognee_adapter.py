@@ -24,16 +24,12 @@ _MODE_TO_SEARCH_TYPE = {
 }
 
 
-def _load_crc_env() -> None:
-    """Load CRC project .env to override benchmark-level LLM/EMBEDDING vars.
-
-    The benchmark's .env sets LLM_MODEL=gpt-4o-mini (OpenAI) for the judge,
-    but CRC needs llama3.1:8b (Ollama).  Pydantic BaseSettings reads os.environ
-    first, so we must set the correct values before Settings() is created.
-    """
+def _read_crc_env() -> dict[str, str]:
+    """Read LLM/EMBEDDING vars from CRC project .env."""
+    result = {}
     env_path = CRC_PATH / ".env"
     if not env_path.exists():
-        return
+        return result
     for line in env_path.read_text().splitlines():
         line = line.strip()
         if not line or line.startswith("#"):
@@ -42,9 +38,27 @@ def _load_crc_env() -> None:
             continue
         key, _, value = line.partition("=")
         key = key.strip()
-        # Override LLM and embedding settings that may conflict
         if key.startswith(("LLM_", "EMBEDDING_")):
-            os.environ[key] = value.strip()
+            result[key] = value.strip()
+    return result
+
+
+def _set_crc_env(crc_vars: dict[str, str]) -> dict[str, str | None]:
+    """Set CRC env vars, return saved originals for restoration."""
+    saved = {}
+    for key, value in crc_vars.items():
+        saved[key] = os.environ.get(key)
+        os.environ[key] = value
+    return saved
+
+
+def _restore_env(saved: dict[str, str | None]) -> None:
+    """Restore original env vars."""
+    for key, value in saved.items():
+        if value is None:
+            os.environ.pop(key, None)
+        else:
+            os.environ[key] = value
 
 
 def _import_crc() -> ModuleType:
@@ -80,6 +94,7 @@ class CogRAGCogneeAdapter(BaseAdapter):
         self._mod = None
         self._service = None
         self._loop = None
+        self._crc_vars: dict[str, str] = {}
 
     def _run(self, coro):
         """Run async coroutine on a persistent event loop."""
@@ -88,34 +103,41 @@ class CogRAGCogneeAdapter(BaseAdapter):
         return self._loop.run_until_complete(coro)
 
     def setup(self) -> None:
-        # Phase 0: load CRC .env so Pydantic Settings picks up Ollama models
-        # instead of benchmark-level LLM_MODEL=gpt-4o-mini
-        _load_crc_env()
+        # Read CRC-specific env vars (LLM_*, EMBEDDING_*) from CRC .env
+        self._crc_vars = _read_crc_env()
 
-        # Phase 1: import config and cognee_setup (lightweight, no Cognee SDK)
-        self._mod = _import_crc()
-        settings = self._mod.get_settings()
+        # Phase 0: temporarily set CRC env vars so Pydantic Settings picks up
+        # Ollama models instead of benchmark-level LLM_MODEL=gpt-4o-mini
+        saved = _set_crc_env(self._crc_vars)
 
-        # Phase 2: override Neo4j credentials to match benchmark container
-        # CRC uses GRAPH_DATABASE_PASSWORD, not NEO4J_PASSWORD
-        neo4j_pw = os.environ.get("NEO4J_PASSWORD", "temporal_kb_2026")
-        os.environ["GRAPH_DATABASE_PASSWORD"] = neo4j_pw
-        os.environ["GRAPH_DATABASE_URL"] = os.environ.get(
-            "NEO4J_URI", "bolt://localhost:7687"
-        )
-        os.environ["GRAPH_DATABASE_USERNAME"] = os.environ.get(
-            "NEO4J_USER", "neo4j"
-        )
+        try:
+            # Phase 1: import config and cognee_setup (lightweight, no Cognee SDK)
+            self._mod = _import_crc()
+            settings = self._mod.get_settings()
 
-        # Phase 3: apply Cognee env vars (LLM_API_KEY, etc.)
-        self._mod.apply_cognee_env(settings)
+            # Phase 2: override Neo4j credentials to match benchmark container
+            neo4j_pw = os.environ.get("NEO4J_PASSWORD", "temporal_kb_2026")
+            os.environ["GRAPH_DATABASE_PASSWORD"] = neo4j_pw
+            os.environ["GRAPH_DATABASE_URL"] = os.environ.get(
+                "NEO4J_URI", "bolt://localhost:7687"
+            )
+            os.environ["GRAPH_DATABASE_USERNAME"] = os.environ.get(
+                "NEO4J_USER", "neo4j"
+            )
 
-        # Phase 4: now safe to import PipelineService (Cognee SDK env vars are set)
-        PipelineService = _import_crc_service()
-        self._service = PipelineService()
+            # Phase 3: apply Cognee env vars (LLM_API_KEY, etc.)
+            self._mod.apply_cognee_env(settings)
+
+            # Phase 4: now safe to import PipelineService (Cognee SDK env vars set)
+            PipelineService = _import_crc_service()
+            self._service = PipelineService()
+        finally:
+            # Restore original env vars so other adapters are not affected
+            _restore_env(saved)
 
     def ingest(self, file_path: str) -> IngestResult:
         prepare_imports(str(CRC_PATH))
+        saved = _set_crc_env(self._crc_vars)
         start = time.monotonic()
         try:
             self._run(self._service.add_file(file_path))
@@ -133,9 +155,12 @@ class CogRAGCogneeAdapter(BaseAdapter):
                 adapter=self.name, document=Path(file_path).name,
                 chunks_count=0, duration_seconds=duration, success=False, error=str(e),
             )
+        finally:
+            _restore_env(saved)
 
     def query(self, question: str, mode: str, lang: str) -> QueryResult:
         prepare_imports(str(CRC_PATH))
+        saved = _set_crc_env(self._crc_vars)
         start = time.monotonic()
         try:
             search_type = _MODE_TO_SEARCH_TYPE.get(mode, "CHUNKS")
@@ -154,13 +179,18 @@ class CogRAGCogneeAdapter(BaseAdapter):
                 adapter=self.name, mode=mode, question_id=0,
                 answer=f"Error: {e}", confidence=0.0, latency=latency,
             )
+        finally:
+            _restore_env(saved)
 
     def cleanup(self) -> None:
         if self._service:
+            saved = _set_crc_env(self._crc_vars)
             try:
                 self._run(self._service.reset())
             except Exception as e:
                 logger.warning("CRC cleanup error: %s", e)
+            finally:
+                _restore_env(saved)
         if self._loop and not self._loop.is_closed():
             self._loop.close()
             self._loop = None
