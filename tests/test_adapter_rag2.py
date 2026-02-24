@@ -65,12 +65,15 @@ class TestRAG2Adapter:
     def test_query_agent(self, mock_import):
         mock_mod = MagicMock()
         qa = MagicMock(answer="agent answer", confidence=0.95, retries=0)
-        mock_mod.RAGAgent.return_value.run.return_value = qa
+        mock_agent_module = MagicMock()
+        mock_agent_module.RAGAgent.return_value.run.return_value = qa
         mock_import.return_value = mock_mod
 
         adapter = RAG2Adapter()
         adapter.setup()
-        result = adapter.query("What is X?", "agent", "en")
+        # Mock importlib.import_module used in agent mode reimport
+        with patch("importlib.import_module", return_value=mock_agent_module):
+            result = adapter.query("What is X?", "agent", "en")
 
         assert result.answer == "agent answer"
 

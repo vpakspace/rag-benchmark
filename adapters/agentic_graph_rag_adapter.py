@@ -38,6 +38,8 @@ def _import_agr() -> ModuleType:
     dual = importlib.import_module("agentic_graph_rag.indexing.dual_node")
     mod.create_passage_nodes = dual.create_passage_nodes
     mod.create_phrase_nodes = dual.create_phrase_nodes
+    mod.embed_phrase_nodes = dual.embed_phrase_nodes
+    mod.init_phrase_index = dual.init_phrase_index
     # Entity extraction (for phrase nodes)
     skeleton = importlib.import_module("agentic_graph_rag.indexing.skeleton")
     mod.extract_entities_full = skeleton.extract_entities_full
@@ -79,7 +81,7 @@ class AgenticGraphRAGAdapter(BaseAdapter):
             # Create passage nodes (vector index) in Neo4j
             passage_nodes = self._mod.create_passage_nodes(chunks, self._driver)
             passage_count = len(passage_nodes) if passage_nodes else 0
-            # Extract entities and create phrase nodes (knowledge graph)
+            # Extract entities, create phrase nodes, embed them, create index
             phrase_count = 0
             try:
                 entities, _rels = self._mod.extract_entities_full(chunks)
@@ -88,6 +90,13 @@ class AgenticGraphRAGAdapter(BaseAdapter):
                         entities, self._driver,
                     )
                     phrase_count = len(phrase_nodes) if phrase_nodes else 0
+                    if phrase_nodes:
+                        cfg = self._mod.get_settings()
+                        client = self._mod.make_openai_client(cfg)
+                        self._mod.embed_phrase_nodes(
+                            phrase_nodes, self._driver, openai_client=client,
+                        )
+                        self._mod.init_phrase_index(self._driver)
             except Exception as e:
                 logger.warning("AGR phrase node creation skipped: %s", e)
             total = passage_count + phrase_count

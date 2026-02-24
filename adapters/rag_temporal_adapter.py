@@ -44,6 +44,10 @@ def _import_rt() -> ModuleType:
     mod.HybridRetriever = importlib.import_module("retrieval.hybrid_retriever").HybridRetriever
     mod.HybridAgent = importlib.import_module("agent.hybrid_agent").HybridAgent
     mod.generate_answer = importlib.import_module("generation.generator").generate_answer
+    # RAG 2.0 models for type conversion
+    rag2_models = importlib.import_module("core.models")
+    mod.Chunk = rag2_models.Chunk
+    mod.SearchResult = rag2_models.SearchResult
     return mod
 
 
@@ -98,7 +102,12 @@ class RAGTemporalAdapter(BaseAdapter):
         start = time.monotonic()
         try:
             if mode == "agent":
-                agent = self._mod.HybridAgent(self._retriever)
+                # Reimport fresh so Pydantic models are from same generation
+                import importlib
+                HybridAgent = importlib.import_module(
+                    "agent.hybrid_agent"
+                ).HybridAgent
+                agent = HybridAgent(self._retriever)
                 qa = agent.run(question)
                 latency = round(time.monotonic() - start, 3)
                 return QueryResult(
@@ -109,7 +118,15 @@ class RAGTemporalAdapter(BaseAdapter):
                 )
             else:
                 results = self._retriever.retrieve(question, mode=mode)
-                qa = self._mod.generate_answer(question, results)
+                # Convert HybridResult → SearchResult for generate_answer
+                search_results = [
+                    self._mod.SearchResult(
+                        chunk=self._mod.Chunk(content=r.content),
+                        score=r.score,
+                    )
+                    for r in results
+                ]
+                qa = self._mod.generate_answer(question, search_results)
                 latency = round(time.monotonic() - start, 3)
                 return QueryResult(
                     adapter=self.name, mode=mode, question_id=0,

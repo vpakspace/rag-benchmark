@@ -41,11 +41,11 @@ def _import_tkb() -> ModuleType:
     return mod
 
 
-# Map benchmark modes to TKB IntentType values
+# Map benchmark modes to TKB IntentType values (lowercase — matches enum)
 _MODE_TO_INTENT = {
-    "structural": "STRUCTURAL",
-    "temporal": "TEMPORAL",
-    "hybrid": "HYBRID",
+    "structural": "structural",
+    "temporal": "temporal",
+    "hybrid": "hybrid",
 }
 
 

@@ -84,7 +84,12 @@ class RAG2Adapter(BaseAdapter):
             elif mode == "reflect":
                 qa = self._mod.reflect_and_answer(question, self._retriever)
             elif mode == "agent":
-                agent = self._mod.RAGAgent(self._retriever, self._store)
+                # Reimport RAGAgent fresh so all Pydantic models (Chunk,
+                # SearchResult) come from the same sys.modules generation,
+                # avoiding "not a valid instance of Chunk" validation errors.
+                import importlib
+                RAGAgent = importlib.import_module("agent.rag_agent").RAGAgent
+                agent = RAGAgent(self._retriever, self._store)
                 qa = agent.run(question)
             else:
                 raise ValueError(f"Unknown mode: {mode}")
